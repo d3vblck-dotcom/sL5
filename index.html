@@ -1,0 +1,457 @@
+# sL5
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dev & Kalina: The Epic 3-Act Romance Adventure</title>
+    <style>
+        :root {
+            --primary-glow: #ff477e;
+            --secondary-glow: #ff70a6;
+            --bg-dark: #0c0513;
+            --panel-bg: rgba(18, 8, 31, 0.92);
+        }
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: var(--bg-dark); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            touch-action: none; 
+            user-select: none;
+        }
+        
+        /* Main Home Menu Styles */
+        #home-menu { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle at center, #2d123d 0%, #0c0513 100%); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            color: white; z-index: 500; text-align: center; padding: 30px; box-sizing: border-box; 
+        }
+        #home-menu h1 { 
+            font-size: 52px; color: var(--secondary-glow); margin: 0 0 10px 0; 
+            text-shadow: 0 4px 25px rgba(255,105,180,0.6); letter-spacing: 2px;
+        }
+        #home-menu p { 
+            color: #d0bfff; margin-bottom: 35px; font-size: 18px; font-style: italic; max-width: 500px; line-height: 1.5;
+        }
+        .menu-btn { 
+            width: 300px; padding: 16px; margin: 12px; 
+            background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); 
+            color: white; border: none; border-radius: 14px; font-size: 18px; font-weight: bold; 
+            cursor: pointer; box-shadow: 0 6px 25px rgba(255,71,126,0.5); transition: all 0.3s ease; 
+        }
+        .menu-btn:hover { transform: scale(1.06); box-shadow: 0 8px 30px rgba(255,71,126,0.8); }
+
+        /* In-Game UI Layer */
+        #ui-layer { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none; display: none; flex-direction: column; justify-content: space-between; 
+            padding: 25px; box-sizing: border-box; z-index: 10;
+        }
+        .interactive { pointer-events: auto; }
+        
+        #hud { 
+            background: var(--panel-bg); color: #fff; padding: 18px 25px; border-radius: 18px; 
+            border: 1px solid rgba(255,105,180,0.4); backdrop-filter: blur(12px); pointer-events: auto; 
+            max-width: 380px; box-shadow: 0 12px 35px rgba(0,0,0,0.7); 
+        }
+        
+        /* Touch Screen D-Pad */
+        #touch-controls { 
+            position: absolute; bottom: 35px; left: 35px; width: 150px; height: 150px; pointer-events: auto; 
+        }
+        .control-btn { 
+            position: absolute; width: 48px; height: 48px; background: rgba(255, 71, 126, 0.75); 
+            border: 2px solid white; border-radius: 50%; color: white; font-size: 22px; 
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        #btn-up { top: 0; left: 51px; }
+        #btn-down { bottom: 0; left: 51px; }
+        #btn-left { top: 51px; left: 0; }
+        #btn-right { top: 51px; right: 0; }
+
+        /* Anytime Kiss Button */
+        #kiss-btn { 
+            position: absolute; bottom: 40px; right: 40px; width: 95px; height: 95px; border-radius: 50%; 
+            background: linear-gradient(135deg, #ff2060, var(--primary-glow)); color: white; font-size: 36px; 
+            border: 4px solid white; box-shadow: 0 10px 35px rgba(255,32,96,0.9); cursor: pointer; pointer-events: auto; 
+            transition: transform 0.2s;
+        }
+        #kiss-btn:active { transform: scale(0.92); }
+
+        /* Challenge Modal Overlay */
+        #challenge-modal { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle, rgba(255,105,180,0.96) 0%, rgba(12,5,19,0.99) 100%); 
+            display: none; flex-direction: column; justify-content: center; align-items: center; 
+            color: white; z-index: 400; backdrop-filter: blur(14px); text-align: center; padding: 35px; box-sizing: border-box; 
+        }
+        
+        /* Floating Heart Particles */
+        .heart-particle { 
+            position: absolute; color: var(--primary-glow); font-size: 32px; 
+            animation: floatUpParticle 2.2s infinite ease-in; pointer-events: none; z-index: 450; 
+        }
+        @keyframes floatUpParticle { 
+            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; } 
+            100% { transform: translateY(-220px) scale(1.8) rotate(20deg); opacity: 0; } 
+        }
+    </style>
+    <!-- Three.js Engine Dependency -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <!-- Professional Home Screen -->
+    <div id="home-menu">
+        <h1>Dev & Kalina</h1>
+        <p>The Ultimate 3-Act Co-Op Romance & Family Challenge Adventure</p>
+        <button class="menu-btn" onclick="launchGameEngine()">Start Adventure 🌅</button>
+        <button class="menu-btn" onclick="showMasterStoryIndex()">Explore All 12 Levels 📖</button>
+    </div>
+
+    <!-- Active Gameplay HUD & Controls -->
+    <div id="ui-layer">
+        <div id="hud">
+            <h3 id="hud-act" style="margin: 0 0 4px 0; color: var(--secondary-glow);">Act 1: The Symphony of Us</h3>
+            <h4 id="hud-level" style="margin: 0 0 6px 0; color: white;">Level 1: The Golden Meet-Cute</h4>
+            <p id="hud-desc" style="margin: 0; font-size: 13px; color: #d0bfff; line-height: 1.4;">Navigate the glowing avenue and overcome the opening obstacle together.</p>
+            <button onclick="executeLevelChallenge()" style="margin-top: 14px; padding: 10px 20px; background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border:none; color:white; border-radius:10px; cursor:pointer; font-weight:bold; box-shadow: 0 5px 18px rgba(255,71,126,0.5);">Conquer Trial ⚔️</button>
+        </div>
+
+        <div id="touch-controls">
+            <div class="control-btn" id="btn-up" ontouchstart="movePlayerAvatar(0, -0.45)" onmousedown="movePlayerAvatar(0, -0.45)">⬆️</div>
+            <div class="control-btn" id="btn-down" ontouchstart="movePlayerAvatar(0, 0.45)" onmousedown="movePlayerAvatar(0, 0.45)">⬇️</div>
+            <div class="control-btn" id="btn-left" ontouchstart="movePlayerAvatar(-0.45, 0)" onmousedown="movePlayerAvatar(-0.45, 0)">⬅️</div>
+            <div class="control-btn" id="btn-right" ontouchstart="movePlayerAvatar(0.45, 0)" onmousedown="movePlayerAvatar(0.45, 0)">➡️</div>
+        </div>
+
+        <button id="kiss-btn" onclick="triggerCinematicKiss()">💋</button>
+    </div>
+
+    <!-- Cinematic Challenge & Victory Modal -->
+    <div id="challenge-modal">
+        <h1 id="modal-title" style="font-size: 44px; margin: 0 0 12px 0; text-shadow: 0 4px 20px rgba(0,0,0,0.5);">🛡️ Trial Conquered!</h1>
+        <p id="modal-body" style="font-size: 19px; font-style: italic; color: #ffe6f2; max-width: 550px; line-height: 1.6; margin-bottom: 25px;"></p>
+        <button onclick="advanceToNextStage()" style="padding: 14px 32px; background: white; color: var(--primary-glow); border:none; border-radius:12px; font-size: 17px; font-weight:bold; cursor:pointer; box-shadow: 0 6px 25px rgba(0,0,0,0.4);">Proceed Forward ✨</button>
+    </div>
+
+    <script>
+        let scene, camera, renderer, devModel, kalinaModel, globalLight;
+        let gameStarted = false;
+        let activeLevelIndex = 0;
+
+        // Comprehensive 12-Level Master Progression Matrix Across All 3 Acts
+        const masterCampaignLevels = [
+            // ==================== ACT 1: THE SYMPHONY OF US ====================
+            {
+                act: "Act 1: The Symphony of Us",
+                level: "Level 1: The Golden Meet-Cute",
+                description: "Wandering down Sunset Avenue during golden hour when your paths cross unexpectedly.",
+                obstacle: "Challenge: Navigating through evening rush-hour crowds.",
+                resolution: "You lock eyes through the bustle, breaking the noise as a warm breeze seals your initial spark."
+            },
+            {
+                act: "Act 1: The Symphony of Us",
+                level: "Level 2: The Cozy Café Refuge",
+                description: "Stepping into a warm, glowing boutique coffee shop to escape a sudden evening chill.",
+                obstacle: "Challenge: Finding a secluded table amidst a packed room.",
+                resolution: "Sharing warm cups and endless laughter over inside jokes, your bond deepens instantly."
+            },
+            {
+                act: "Act 1: The Symphony of Us",
+                level: "Level 3: Starlit Bench Conversations",
+                description: "Sitting side-by-side beneath flickering park streetlamps as the city winds down.",
+                obstacle: "Challenge: Overcoming shyness and opening up completely.",
+                resolution: "Hours melt away into deep, vulnerable conversations under the quiet night sky."
+            },
+            {
+                act: "Act 1: The Symphony of Us",
+                level: "Level 4: Act 1 Finale - First Embrace",
+                description: "Cementing the foundational chapter of your journey with an unforgettable embrace.",
+                obstacle: "Challenge: Recognizing how deeply intertwined your lives have become.",
+                resolution: "ACT 1 COMPLETE: The foundation of your romantic world is locked in permanently. 🌅"
+            },
+
+            // ==================== ACT 2: TRIALS & TRIUMPHS ====================
+            {
+                act: "Act 2: Trials & Triumphs",
+                level: "Level 5: The Long-Distance Time Zone Maze",
+                description: "Bridging thousands of miles apart through late-night video syncs and countdowns.",
+                obstacle: "Challenge: Conflicting schedules and exhausting time differences.",
+                resolution: "You master the distance, proving that miles are just numbers when love is genuine."
+            },
+            {
+                act: "Act 2: Trials & Triumphs",
+                level: "Level 6: The Strict Family Skepticism Trial",
+                description: "Facing traditional family doubts and proving your absolute devotion against all odds.",
+                obstacle: "Challenge: Overcoming conservative family barriers and skepticism.",
+                resolution: "Through patience, mutual respect, and steadfast loyalty, family doubts turn into complete acceptance."
+            },
+            {
+                act: "Act 2: Trials & Triumphs",
+                level: "Level 7: The Airport Arrivals Gate Sprint",
+                description: "Dashing across a crowded terminal to close the physical gap once and for all.",
+                obstacle: "Challenge: Navigating security gates and baggage claim crowds.",
+                resolution: "You throw open your arms, collide in a breathless embrace, and the world fades away."
+            },
+            {
+                act: "Act 2: Trials & Triumphs",
+                level: "Level 8: Act 2 Finale - Unbreakable Oath",
+                description: "Standing side-by-side against life's heaviest storms and professional hurdles.",
+                obstacle: "Challenge: Enduring high-stress life obstacles hand-in-hand.",
+                resolution: "ACT 2 COMPLETE: You have proven that no trial can break your partnership. 🛡️"
+            },
+
+            // ==================== ACT 3: FOREVER & ALWAYS ====================
+            {
+                act: "Act 3: Forever & Always",
+                level: "Level 9: Returning to Sunset Avenue",
+                description: "Walking back to the exact coordinates where your story first began years ago.",
+                obstacle: "Challenge: Reliving every cherished memory of your shared evolution.",
+                resolution: "Every laugh, trial, and victory echoes softly as you approach the destination."
+            },
+            {
+                act: "Act 3: Forever & Always",
+                level: "Level 10: The Pathway of Roses",
+                description: "Following a glowing candlelit trail illuminated by warm golden lanterns.",
+                obstacle: "Challenge: Heartbeats racing with immense anticipation.",
+                resolution: "Kalina steps into a breathtaking floral sanctuary under the evening starlight."
+            },
+            {
+                act: "Act 3: Forever & Always",
+                level: "Level 11: Dropping to One Knee",
+                description: "Taking her hands, looking deep into her eyes, and opening the velvet ring box.",
+                obstacle: "Challenge: Overwhelming joy and breathless emotion.",
+                resolution: "'Kalina, you are my home, my peace, and my future. Will you marry me?'"
+            },
+            {
+                act: "Act 3: Forever & Always",
+                level: "Level 12: Epilogue - The Forever Yes",
+                description: "The ultimate climax of your epic journey together.",
+                obstacle: "Challenge: None. Only pure, unadulterated love.",
+                resolution: "'YES! A million times yes!' ✨ Walking into eternity together as husband and wife. 💍❤️"
+            }
+        ];
+
+        function showMasterStoryIndex() {
+            let summary = "THE 12-LEVEL CAMPAIGN INDEX:\n\n";
+            masterCampaignLevels.forEach((lvl, idx) => {
+                summary += `${lvl.level}\n  -> ${lvl.description}\n\n`;
+            });
+            alert(summary);
+        }
+
+        function launchGameEngine() {
+            document.getElementById('home-menu').style.display = 'none';
+            document.getElementById('ui-layer').style.display = 'flex';
+            gameStarted = true;
+            initialize3DScene();
+            updateHUDDisplay();
+        }
+
+        function executeLevelChallenge() {
+            if (!gameStarted) return;
+            let current = masterCampaignLevels[activeLevelIndex];
+
+            document.getElementById('modal-title').innerText = "⚔️ " + current.level + " Conquered!";
+            document.getElementById('modal-body').innerText = current.resolution + "\n\n(" + current.obstacle + ")";
+            document.getElementById('challenge-modal').style.display = 'flex';
+        }
+
+        function advanceToNextStage() {
+            document.getElementById('challenge-modal').style.display = 'none';
+            activeLevelIndex++;
+
+            if (activeLevelIndex >= masterCampaignLevels.length) {
+                activeLevelIndex = masterCampaignLevels.length - 1;
+                alert("You have completed all 3 Acts and achieved your eternal happily ever after! 💍✨");
+            }
+
+            // Dynamic atmospheric shifts between Acts
+            if (activeLevelIndex === 4) {
+                scene.background = new THREE.Color(0x111625); // Act 2 Deep Midnight Blue
+                globalLight.color.setHex(0x99bbff);
+            } else if (activeLevelIndex === 8) {
+                scene.background = new THREE.Color(0x3d0f1f); // Act 3 Deep Romantic Crimson
+                globalLight.color.setHex(0xffb1c1);
+            }
+
+            updateHUDDisplay();
+        }
+
+        function updateHUDDisplay() {
+            let current = masterCampaignLevels[activeLevelIndex];
+            document.getElementById('hud-act').innerText = current.act;
+            document.getElementById('hud-level').innerText = current.level;
+            document.getElementById('hud-desc').innerText = current.description;
+        }
+
+        function initialize3DScene() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x2d123d);
+            scene.fog = new THREE.FogExp2(0x2d123d, 0.01);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 4.5, 13);
+            camera.lookAt(0, 1.3, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+
+            globalLight = new THREE.AmbientLight(0xffb199, 1.1);
+            scene.add(globalLight);
+
+            const sunLight = new THREE.DirectionalLight(0xff7043, 2.4);
+            sunLight.position.set(25, 35, 25);
+            sunLight.castShadow = true;
+            scene.add(sunLight);
+
+            // Detailed Ground & Avenue Floor
+            const groundGeo = new THREE.PlaneGeometry(400, 400);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x160f22, roughness: 0.7 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            const roadGeo = new THREE.PlaneGeometry(14, 400);
+            const roadMat = new THREE.MeshStandardMaterial({ color: 0x221c2b, roughness: 0.5 });
+            const road = new THREE.Mesh(roadGeo, roadMat);
+            road.rotation.x = -Math.PI / 2;
+            road.position.set(0, 0.02, 0);
+            road.receiveShadow = true;
+            scene.add(road);
+
+            // Glowing Shops & Sidewalk Structures
+            for (let zPos = -150; zPos <= 150; zPos += 25) {
+                createBoutiqueShop(-16, zPos);
+                createBoutiqueShop(16, zPos);
+            }
+
+            // --- DEV (5'10", Detailed Face, Blue Shirt) ---
+            devModel = buildDetailedAvatarCharacter(0xffd1b3, 0x111111, 0x1b4965, 1.1);
+            devModel.position.set(-2.2, 0, 0);
+            scene.add(devModel);
+
+            // --- KALINA (5'4", Detailed Face, Aesthetic Outfit) ---
+            kalinaModel = buildDetailedAvatarCharacter(0xe6b89c, 0x140d08, 0x2b1b2d, 0.95);
+            kalinaModel.position.set(2.2, 0, 0);
+            scene.add(kalinaModel);
+
+            runAnimationLoop();
+        }
+
+        function buildDetailedAvatarCharacter(skinTone, hairTone, outfitTone, scaleFactor) {
+            const avatarGroup = new THREE.Group();
+
+            // Torso
+            const torsoGeo = new THREE.BoxGeometry(0.6 * scaleFactor, 1.05 * scaleFactor, 0.32 * scaleFactor);
+            const torsoMat = new THREE.MeshStandardMaterial({ color: outfitTone, roughness: 0.4 });
+            const torso = new THREE.Mesh(torsoGeo, torsoMat);
+            torso.position.y = 0.52 * scaleFactor;
+            torso.castShadow = true;
+            avatarGroup.add(torso);
+
+            // Head & Jaw Structure
+            const headGeo = new THREE.BoxGeometry(0.38, 0.42, 0.38);
+            const headMat = new THREE.MeshStandardMaterial({ color: skinTone, roughness: 0.5 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 1.3 * scaleFactor;
+            head.castShadow = true;
+            avatarGroup.add(head);
+
+            // Detailed Facial Features (Eyes, Eyebrows, Lips)
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x080808 });
+            const leftEye = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.02), eyeMat);
+            leftEye.position.set(-0.09, 1.34, 0.2);
+            avatarGroup.add(leftEye);
+            const rightEye = leftEye.clone();
+            rightEye.position.x = 0.09;
+            avatarGroup.add(rightEye);
+
+            const browMat = new THREE.MeshBasicMaterial({ color: hairTone });
+            const leftBrow = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.02, 0.02), browMat);
+            leftBrow.position.set(-0.09, 1.42, 0.2);
+            avatarGroup.add(leftBrow);
+            const rightBrow = leftBrow.clone();
+            rightBrow.position.x = 0.09;
+            avatarGroup.add(rightBrow);
+
+            const lipMat = new THREE.MeshBasicMaterial({ color: 0xd97788 });
+            const lips = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.03, 0.02), lipMat);
+            lips.position.set(0, 1.16, 0.2);
+            avatarGroup.add(lips);
+
+            // Hair
+            const hairGeo = new THREE.BoxGeometry(0.44, 0.26, 0.44);
+            const hairMat = new THREE.MeshStandardMaterial({ color: hairTone, roughness: 0.8 });
+            const hair = new THREE.Mesh(hairGeo, hairMat);
+            hair.position.set(0, 1.55 * scaleFactor, 0);
+            hair.castShadow = true;
+            avatarGroup.add(hair);
+
+            return avatarGroup;
+        }
+
+        function createBoutiqueShop(xCoord, zCoord) {
+            const buildingGeo = new THREE.BoxGeometry(12, 10, 18);
+            const buildingMat = new THREE.MeshStandardMaterial({ color: 0x322045, roughness: 0.6 });
+            const building = new THREE.Mesh(buildingGeo, buildingMat);
+            building.position.set(xCoord, 5, zCoord);
+            building.castShadow = true;
+            building.receiveShadow = true;
+            scene.add(building);
+
+            // Glowing Shop Window
+            const windowGeo = new THREE.BoxGeometry(9, 3.5, 0.2);
+            const windowMat = new THREE.MeshBasicMaterial({ color: 0xffcc88 });
+            const shopWindow = new THREE.Mesh(windowGeo, windowMat);
+            shopWindow.position.set(xCoord > 0 ? xCoord - 6.1 : xCoord + 6.1, 2.5, zCoord);
+            scene.add(shopWindow);
+        }
+
+        function movePlayerAvatar(deltaX, deltaZ) {
+            if (!gameStarted) return;
+            devModel.position.x += deltaX;
+            devModel.position.z += deltaZ;
+            kalinaModel.position.x += deltaX * 0.9;
+            kalinaModel.position.z += deltaZ * 0.9;
+            camera.position.x = devModel.position.x;
+            camera.position.z = devModel.position.z + 13;
+        }
+
+        function triggerCinematicKiss() {
+            const modal = document.getElementById('challenge-modal');
+            document.getElementById('modal-title').innerText = "💕 Dev & Kalina 💕";
+            document.getElementById('modal-body').innerText = `"A tender, cinematic embrace shared under the evening starlight, locking your hearts together forever."`;
+            modal.style.display = 'flex';
+            devModel.position.x = -0.35;
+            kalinaModel.position.x = 0.35;
+
+            // Spawn floating heart particle shower
+            for (let i = 0; i < 12; i++) {
+                let heart = document.createElement('div');
+                heart.className = 'heart-particle';
+                heart.innerHTML = '❤️';
+                heart.style.left = (35 + Math.random() * 30) + '%';
+                heart.style.bottom = '40%';
+                heart.style.animationDuration = (1.5 + Math.random() * 1.2) + 's';
+                modal.appendChild(heart);
+                setTimeout(() => heart.remove(), 2500);
+            }
+        }
+
+        function runAnimationLoop() {
+            requestAnimationFrame(runAnimationLoop);
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+    </script>
+</body>
+</html>
